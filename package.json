@@ -4,6 +4,7 @@
   "description": "almuntaser website server",
   "main": "index.js",
   "scripts": {
+    "start": "node server.js", 
     "server": "nodemon server.js"
   },
   "author": "Atid Hafsa",
