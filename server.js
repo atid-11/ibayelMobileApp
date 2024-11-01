@@ -59,7 +59,6 @@ const createUser = async (username, plainPassword) => {
 
 // Call the function with the username and plain text password
 
-
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

@@ -5,10 +5,20 @@ const Section = require('../models/section');
 const Type = require("../models/type");
 const Product = require("../models/product");
 
-// Configure multer for file uploads
-const upload = multer({ dest: 'uploads/' }); // Files will be saved in the 'uploads' folder
 
-// Get all sections
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage }).fields([
+  { name: "thumbnail", maxCount: 1 },
+]);
+
 router.get('/', async (req, res) => {
   try {
     const sections = await Section.find();
@@ -18,10 +28,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create a new section
-router.post('/', upload.single('thumbnail'), async (req, res) => {
+router.post('/', upload, async (req, res) => {
   const { name } = req.body;
-  const thumbnail = req.file ? req.file.path : null;
+  const thumbnail = req.files["thumbnail"] ? req.files["thumbnail"][0].path : null;
 
   if (!name || !thumbnail) {
     return res.status(400).json({ message: 'Name and thumbnail are required' });
@@ -36,7 +45,6 @@ router.post('/', upload.single('thumbnail'), async (req, res) => {
   }
 });
 
-// Middleware to get a section by ID
 async function getSection(req, res, next) {
   let section;
   try {
@@ -62,30 +70,23 @@ router.get('/:sectionId/types', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-// Get random product from random type for each section
 router.get('/random-products', async (req, res) => {
   try {
-    // Find all sections
     const sections = await Section.find().exec();
     let randomProducts = [];
 
-    // Helper function to get all products from a specific type
     const getProductsFromType = async (type) => {
       const products = await Product.find({ typeId: type._id }).exec();
       return products;
     };
 
-    // Loop through each section
     for (const section of sections) {
-      // Find all types for the current section
       const types = await Type.find({ sectionId: section._id }).exec();
       if (types.length === 0) {
         console.log(`No types found for section ${section.name}`);
-        continue; // Skip sections with no types
+        continue; 
       }
 
-      // Collect products from all types in the section
       for (const type of types) {
         const products = await getProductsFromType(type);
         if (products.length > 0) {
@@ -93,27 +94,21 @@ router.get('/random-products', async (req, res) => {
         }
       }
 
-      // If we gathered enough products, break out of the loop
-      if (randomProducts.length >= 6) {
+      if (randomProducts.length >= 8) {
         break;
       }
     }
 
-    // If we still have less than 6 products, duplicate random products from the available ones
-    while (randomProducts.length < 6 && randomProducts.length > 0) {
-      const productToDuplicate = randomProducts[Math.floor(Math.random() * randomProducts.length)];
-      randomProducts.push(productToDuplicate);
+    if (randomProducts.length > 8) {
+      randomProducts = randomProducts.slice(0, 8);
     }
 
-    // Ensure we return at least 6 products or handle the case where no products are found
     if (randomProducts.length === 0) {
-      return res.status(404).json({ message: 'No products found' });
+      return ('No products found' );
     }
 
-    // Shuffle the products to return them in random order
-    randomProducts = randomProducts.sort(() => Math.random() - 0.5).slice(0, 6);
+    randomProducts = randomProducts.sort(() => Math.random() - 0.5);
 
-    // Return only the product data
     res.json(randomProducts);
   } catch (error) {
     console.error('Error fetching random products:', error);
@@ -122,5 +117,5 @@ router.get('/random-products', async (req, res) => {
 });
 
 
-module.exports = router;
 
+module.exports = router;

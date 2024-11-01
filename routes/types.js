@@ -5,7 +5,6 @@ const Section = require("../models/section");
 const Product = require("../models/product");
 const multer = require("multer");
 
-// Multer storage configuration for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
@@ -15,13 +14,11 @@ const storage = multer.diskStorage({
   },
 });
 
-// Multer middleware for handling multiple image uploads
 const upload = multer({ storage: storage }).fields([
   { name: "images", maxCount: 15 },
   { name: "thumbnail", maxCount: 1 },
 ]);
 
-// Get all types and populate associated section and products
 router.get("/", async (req, res) => {
   try {
     const types = await Type.find()
@@ -33,7 +30,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get a single type by ID
 router.get("/:id", getType, async (req, res) => {
   try {
     const typeWithDetails = await Type.findById(req.params.id)
@@ -45,7 +41,6 @@ router.get("/:id", getType, async (req, res) => {
   }
 });
 
-// Create a new type under a specific section
 router.post("/", upload, async (req, res) => {
   const { name, sectionId } = req.body;
   const thumbnail = req.files["thumbnail"] ? req.files["thumbnail"][0].path : null;
@@ -64,7 +59,6 @@ router.post("/", upload, async (req, res) => {
   }
 });
 
-// Add a new product to a type
 router.post("/:typeId/products", upload, async (req, res) => {
   const { name, descriptions, caracteristique, price, Quantity } = req.body;
   const { typeId } = req.params;
@@ -116,7 +110,6 @@ router.post("/:typeId/products", upload, async (req, res) => {
   }
 });
 
-// Update a type
 router.patch("/:id", getType, async (req, res) => {
   if (req.body.name != null) {
     res.type.name = req.body.name;
@@ -134,7 +127,6 @@ router.patch("/:id", getType, async (req, res) => {
   }
 });
 
-// Delete a type and its associated products
 router.delete("/:id", getType, async (req, res) => {
   try {
     await Product.deleteMany({ typeId: req.params.id });
@@ -145,7 +137,6 @@ router.delete("/:id", getType, async (req, res) => {
   }
 });
 
-// Middleware to fetch a type by ID
 async function getType(req, res, next) {
   try {
     const type = await Type.findById(req.params.id);

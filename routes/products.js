@@ -6,7 +6,6 @@ const multer = require("multer");
 const fs = require("fs"); 
 const path = require("path");
 
-// Multer storage configuration for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
@@ -16,28 +15,24 @@ const storage = multer.diskStorage({
   },
 });
 
-// Multer middleware for handling multiple image uploads
 const upload = multer({ storage: storage }).fields([
   { name: "images", maxCount: 15 },
   { name: "thumbnail", maxCount: 1 },
 ]);
 
-// Get all products
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find().populate("typeId", "name"); // Populating typeId with type name
+    const products = await Product.find().populate("typeId", "name"); 
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get a product by ID
 router.get("/:id", getProduct, (req, res) => {
   res.json(res.product);
 });
 
-// Create a new product
 router.post("/", upload, async (req, res) => {
   const {
     name,
@@ -79,7 +74,6 @@ router.post("/", upload, async (req, res) => {
   }
 });
 
-// Update an existing product
 router.patch("/:id", upload, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -116,7 +110,6 @@ router.patch("/:id", upload, async (req, res) => {
       product.images.push(...updatedImages);
     }
 
-    // Handling deleted images
     if (Array.isArray(deletedImages)) {
       deletedImages.forEach((deletedImage) => {
         const imagePathToDelete = path.join(__dirname, "..", deletedImage);
@@ -141,7 +134,6 @@ router.patch("/:id", upload, async (req, res) => {
   }
 });
 
-// Delete a product by ID
 router.delete("/:id", getProduct, async (req, res) => {
   try {
     await res.product.deleteOne();
@@ -151,7 +143,6 @@ router.delete("/:id", getProduct, async (req, res) => {
   }
 });
 
-// Middleware to fetch a product by ID
 async function getProduct(req, res, next) {
   try {
     const product = await Product.findById(req.params.id).populate("typeId", "name");
